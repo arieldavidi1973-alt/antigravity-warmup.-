@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שאלון Onboarding - בוחני פטנטים</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap');
+
+        :root {
+            --primary: #4ade80;
+            --primary-hover: #22c55e;
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --error: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Animated background particles effect */
+        .bg-circles {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            animation: float 20s infinite linear;
+        }
+        .circle:nth-child(1) { width: 300px; height: 300px; top: -100px; right: -100px; animation-duration: 25s; }
+        .circle:nth-child(2) { width: 400px; height: 400px; bottom: -150px; left: -100px; animation-duration: 30s; animation-direction: reverse; }
+        .circle:nth-child(3) { width: 150px; height: 150px; top: 40%; left: 60%; animation-duration: 15s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, 50px) rotate(180deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+
+        .quiz-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(to left, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to left, #60a5fa, #c084fc);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 10px;
+        }
+
+        .question-wrapper {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2.question-text {
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            font-weight: 600;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 18px 24px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-align: right;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.selected {
+            background: rgba(96, 165, 250, 0.2);
+            border-color: #60a5fa;
+            box-shadow: 0 0 15px rgba(96, 165, 250, 0.2);
+        }
+
+        .option-btn.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--success);
+        }
+
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--error);
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .question-counter {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .next-btn {
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+
+        .next-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .next-btn:hover {
+            box-shadow: 0 5px 15px rgba(192, 132, 252, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Results Screen */
+        .results-wrapper {
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(#60a5fa 0%, rgba(255,255,255,0.1) 0%);
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            background: var(--bg-gradient-end);
+            border-radius: 50%;
+        }
+
+        .score-value {
+            position: relative;
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            z-index: 1;
+        }
+
+        .results-text {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .results-feedback {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 600px) {
+            .quiz-container {
+                padding: 25px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            h2.question-text {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-circles">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <div class="quiz-container">
+        <div class="header">
+            <h1>הכשרת בוחני פטנטים</h1>
+        </div>
+        
+        <div class="progress-bar-container" id="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div id="quiz-area">
+            <div class="question-wrapper">
+                <h2 class="question-text" id="question-text">טוען שאלה...</h2>
+                <div class="options-grid" id="options-grid">
+                    <!-- Options will be injected here -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="question-counter" id="question-counter">שאלה 1 מתוך 8</div>
+                <button class="next-btn" id="next-btn">המשך</button>
+            </div>
+        </div>
+
+        <div class="results-wrapper" id="results-area">
+            <h2 class="results-text">ההכשרה הושלמה!</h2>
+            <div class="score-circle" id="score-circle">
+                <div class="score-value" id="score-value">0%</div>
+            </div>
+            <p class="results-feedback" id="results-feedback">כל הכבוד, סיימת את השאלון.</p>
+            <button class="restart-btn" id="restart-btn">התחל מחדש</button>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // הגדרת השאלות - כאן אפשר לערוך, להוסיף או להסיר שאלות בעתיד
+        // =====================================================================
+        const questionsData = [
+            {
+                question: "מהו תפקידו העיקרי של בוחן פטנטים?",
+                correctAnswer: "לבחון בקשות לפטנט ולקבוע אם הן עומדות בדרישות החוק",
+                incorrectAnswers: [
+                    "לייצג ממציאים בבית המשפט",
+                    "לפתח המצאות חדשות עבור המדינה",
+                    "לשווק פטנטים לחברות מסחריות"
+                ]
+            },
+            {
+                question: "מהם שלושת התנאים הבסיסיים לכשירות פטנט?",
+                correctAnswer: "חידוש, התקדמות המצאתית וישימות תעשייתית",
+                incorrectAnswers: [
+                    "יופי, מקוריות וערך כלכלי",
+                    "מורכבות, טכנולוגיה עלית וסודיות",
+                    "תיעוד מקיף, שרטוטים ברורים ואבטיפוס"
+                ]
+            },
+            {
+                question: "כמה זמן נמשכת ההגנה של פטנט בדרך כלל?",
+                correctAnswer: "20 שנה מתאריך ההגשה",
+                incorrectAnswers: [
+                    "לכל החיים",
+                    "10 שנים מתאריך האישור",
+                    "50 שנה ממות הממציא"
+                ]
+            },
+            {
+                question: "מהו 'ידע קודם' (Prior Art)?",
+                correctAnswer: "כל מידע שהיה נגיש לציבור לפני תאריך הבכורה",
+                incorrectAnswers: [
+                    "רק פטנטים קודמים שאושרו בישראל",
+                    "ידע סודי ששמור בחברות טכנולוגיה",
+                    "הידע האישי של בוחן הפטנטים"
+                ]
+            },
+            {
+                question: "מהי דרישת ה'חידוש' (Novelty)?",
+                correctAnswer: "ההמצאה לא פורסמה או נודעה ברבים בשום מקום בעולם לפני תאריך ההגשה",
+                incorrectAnswers: [
+                    "ההמצאה משתמשת בטכנולוגיה של השנה האחרונה",
+                    "ההמצאה פורסמה רק במדינה אחת עד כה",
+                    "הממציא לא סיפר על כך לאף אחד מלבד למשפחתו"
+                ]
+            },
+            {
+                question: "האם תוכנת מחשב 'כשלעצמה' (As such) כשירה לרישום כפטנט בישראל?",
+                correctAnswer: "לא, אלא אם היא יוצרת אפקט טכני ממשי או משנה תהליך פיזי",
+                incorrectAnswers: [
+                    "כן, כל שורת קוד מוגנת אוטומטית כפטנט",
+                    "לא, תוכנות מוגנות רק תחת זכויות יוצרים ואינן יכולות להיות פטנט אף פעם",
+                    "כן, אבל רק אם התוכנה נכתבה בשפת C++"
+                ]
+            },
+            {
+                question: "מהי המשמעות של 'התקדמות המצאתית' (Inventive Step)?",
+                correctAnswer: "ההמצאה אינה מובנת מאליה לבעל מקצוע ממוצע בתחום",
+                incorrectAnswers: [
+                    "ההמצאה מהווה פריצת דרך מדעית עולמית",
+                    "ההמצאה דורשת ציוד יקר לייצור",
+                    "ההמצאה מכילה יותר מ-10 רכיבים שונים"
+                ]
+            },
+            {
+                question: "איזה סוג של המצאות אינו כשיר לרישום כפטנט לפי החוק בישראל?",
+                correctAnswer: "שיטות לטיפול רפואי בגוף האדם ותהליכים ביולוגיים טבעיים",
+                incorrectAnswers: [
+                    "מכשירים אלקטרוניים זעירים",
+                    "תרכובות כימיות ופורמולציות של תרופות",
+                    "כלים חקלאיים חדשניים"
+                ]
+            }
+        ];
+        // =====================================================================
+        // סוף אזור הגדרת השאלות
+        // =====================================================================
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hasAnswered = false;
+        let questions = [];
+
+        // DOM Elements
+        const questionText = document.getElementById('question-text');
+        const optionsGrid = document.getElementById('options-grid');
+        const nextBtn = document.getElementById('next-btn');
+        const questionCounter = document.getElementById('question-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const quizArea = document.getElementById('quiz-area');
+        const resultsArea = document.getElementById('results-area');
+        const progressContainer = document.getElementById('progress-container');
+        const scoreValue = document.getElementById('score-value');
+        const scoreCircle = document.getElementById('score-circle');
+        const resultsFeedback = document.getElementById('results-feedback');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // Helper function to shuffle arrays
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Initialize quiz
+        function initQuiz() {
+            // Shuffle the order of the questions themselves
+            questions = shuffleArray(questionsData);
+            currentQuestionIndex = 0;
+            score = 0;
+            quizArea.style.display = 'block';
+            progressContainer.style.display = 'block';
+            resultsArea.style.display = 'none';
+            loadQuestion();
+        }
+
+        // Load a question
+        function loadQuestion() {
+            hasAnswered = false;
+            nextBtn.classList.remove('visible');
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'סיום שאלון' : 'המשך';
+            
+            const currentQ = questions[currentQuestionIndex];
+            questionText.textContent = currentQ.question;
+            
+            // Update counters and progress
+            questionCounter.textContent = `שאלה ${currentQuestionIndex + 1} מתוך ${questions.length}`;
+            progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+
+            // Prepare and shuffle options
+            const allOptions = [
+                { text: currentQ.correctAnswer, isCorrect: true },
+                ...currentQ.incorrectAnswers.map(ans => ({ text: ans, isCorrect: false }))
+            ];
+            
+            const shuffledOptions = shuffleArray(allOptions);
+            
+            // Render options
+            optionsGrid.innerHTML = '';
+            shuffledOptions.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option.text;
+                
+                // Reset animation
+                btn.style.animation = `fadeIn 0.3s ease forwards ${(index * 0.1)}s`;
+                btn.style.opacity = '0';
+                
+                btn.onclick = () => selectOption(btn, option.isCorrect, shuffledOptions);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        // Handle option selection
+        function selectOption(selectedBtn, isCorrect, allOptions) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const allButtons = optionsGrid.querySelectorAll('.option-btn');
+            
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                score++;
+            } else {
+                selectedBtn.classList.add('wrong');
+                // Find and highlight correct answer
+                allButtons.forEach((btn, idx) => {
+                    if (allOptions[idx].isCorrect) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            nextBtn.classList.add('visible');
+            progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+        }
+
+        // Show final results
+        function showResults() {
+            quizArea.style.display = 'none';
+            progressContainer.style.display = 'none';
+            resultsArea.style.display = 'block';
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            // Animate score count up
+            let currentPercentage = 0;
+            const interval = setInterval(() => {
+                currentPercentage++;
+                scoreValue.textContent = `${currentPercentage}%`;
+                scoreCircle.style.background = `conic-gradient(#60a5fa ${currentPercentage}%, rgba(255,255,255,0.1) ${currentPercentage}%)`;
+                
+                if (currentPercentage >= percentage) {
+                    clearInterval(interval);
+                    if (percentage === 0) {
+                        scoreValue.textContent = `0%`;
+                        scoreCircle.style.background = `conic-gradient(#60a5fa 0%, rgba(255,255,255,0.1) 0%)`;
+                    }
+                }
+            }, 20);
+
+            if (percentage >= 80) {
+                resultsFeedback.textContent = 'מצוין! אתה מוכן להתחיל לעבוד כבוחן פטנטים.';
+            } else if (percentage >= 50) {
+                resultsFeedback.textContent = 'תוצאה טובה, אבל כדאי לחזור על חלק מהמושגים.';
+            } else {
+                resultsFeedback.textContent = 'מומלץ לעבור שוב על חומרי ההדרכה.';
+            }
+        }
+
+        // Event listeners
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        restartBtn.addEventListener('click', initQuiz);
+
+        // Start the app
+        initQuiz();
+    </script>
+</body>
+</html>
